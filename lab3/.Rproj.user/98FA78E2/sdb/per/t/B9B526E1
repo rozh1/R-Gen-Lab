@@ -1,0 +1,16 @@
+{
+    "contents" : "C;L;R;F;LR;FB;Ch\n-1;-1;-1;1;0.5;1;0\n1;-1;-1;-1;0.5;0;1\n-1;1;-1;-1;0;0.5;0\n-1;-1;1;-1;1;0.5;0\n",
+    "created" : 1396097738922.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "265151627",
+    "id" : "B9B526E1",
+    "lastKnownWriteTime" : 1396803065,
+    "path" : "~/R/lab3/neurons_data.csv",
+    "project_path" : "neurons_data.csv",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "text"
+}

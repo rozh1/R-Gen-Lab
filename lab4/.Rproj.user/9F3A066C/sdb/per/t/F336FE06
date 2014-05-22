@@ -1,0 +1,21 @@
+{
+    "contents" : "",
+    "created" : 1400404658906.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F336FE06",
+    "lastKnownWriteTime" : 7741240723082584096,
+    "path" : null,
+    "properties" : {
+        "caption" : "train",
+        "contentUrl" : "content?title=train&file=7158058b39274928bbe485cd936ec9b7.htm",
+        "displayedObservations" : "1000",
+        "displayedVariables" : 12,
+        "totalObservations" : "2784",
+        "variables" : "11"
+    },
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

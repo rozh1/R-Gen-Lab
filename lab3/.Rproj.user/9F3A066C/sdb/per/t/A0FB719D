@@ -1,0 +1,16 @@
+{
+    "contents" : "C;L;R;F;LR;FB;Ch\n0;0;0;1;0.5;1;0\n1;0;0;0;0.5;0;1\n0;1;0;0;0;0.5;0\n0;0;1;0;1;0.5;0",
+    "created" : 1396370219932.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3794089478",
+    "id" : "A0FB719D",
+    "lastKnownWriteTime" : 1396370230,
+    "path" : "~/R/gen/lab3/study",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "text"
+}

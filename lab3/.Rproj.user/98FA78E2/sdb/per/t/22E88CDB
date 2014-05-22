@@ -1,0 +1,22 @@
+{
+    "contents" : "",
+    "created" : 1396779907980.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "22E88CDB",
+    "lastKnownWriteTime" : 21392300099829876,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "caption" : "needOutput",
+        "contentUrl" : "content?title=needOutput&file=1664015607654e6bb905e7a42edb22e3.htm",
+        "displayedObservations" : "1",
+        "displayedVariables" : 4,
+        "totalObservations" : "1",
+        "variables" : "3"
+    },
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

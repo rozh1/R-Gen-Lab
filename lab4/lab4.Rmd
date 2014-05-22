@@ -1,0 +1,159 @@
+Лабораторная работа №4
+========================================================
+Задание
+--------------------------------------------------------
+
+Haliotis — род моллюсков. Задача заключается в определении возраста особи по различным параметрам.
+
+Надежный способ определения возраста состоит в том, что раковина моллюска разрезается и производится подсчет витков раковины. Другой, менее надежный, но более простой способ состоит в том, чтобы измерить различные параметры особи и по полученным данным попытаться предсказать ее возраст.
+
+С помощью генетического алгоритма найти программу, которая будет определять возраст малюска на основе данных представленных в файле abalone.data
+
+Классификация перменных
+--------------------------------------------------------
+
+Содержание файла abalone.data
+
+```
+M,0.455,0.365,0.095,0.514,0.2245,0.101,0.15,15
+M,0.35,0.265,0.09,0.2255,0.0995,0.0485,0.07,7
+F,0.53,0.42,0.135,0.677,0.2565,0.1415,0.21,9
+M,0.44,0.365,0.125,0.516,0.2155,0.114,0.155,10
+I,0.33,0.255,0.08,0.205,0.0895,0.0395,0.055,7
+I,0.425,0.3,0.095,0.3515,0.141,0.0775,0.12,8
+F,0.53,0.415,0.15,0.7775,0.237,0.1415,0.33,20
+F,0.545,0.425,0.125,0.768,0.294,0.1495,0.26,16
+M,0.475,0.37,0.125,0.5095,0.2165,0.1125,0.165,9
+F,0.55,0.44,0.15,0.8945,0.3145,0.151,0.32,19
+```
+
+Как видно, первый столбец нуждается в кодировании, т.к. на входе должны быть числа. Значения являются дискретными и никак не свзяны, поэтому кодировать будем по каналам:
+```
+I=0,0,1
+M=0,1,0
+F=1,0,0
+```
+
+В результате получим файл с данными:
+
+```
+0,1,0,0.455,0.365,0.095,0.514,0.2245,0.101,0.15,15
+0,1,0,0.35,0.265,0.09,0.2255,0.0995,0.0485,0.07,7
+1,0,0,0.53,0.42,0.135,0.677,0.2565,0.1415,0.21,9
+0,1,0,0.44,0.365,0.125,0.516,0.2155,0.114,0.155,10
+0,0,1,0.33,0.255,0.08,0.205,0.0895,0.0395,0.055,7
+0,0,1,0.425,0.3,0.095,0.3515,0.141,0.0775,0.12,8
+1,0,0,0.53,0.415,0.15,0.7775,0.237,0.1415,0.33,20
+1,0,0,0.545,0.425,0.125,0.768,0.294,0.1495,0.26,16
+0,1,0,0.475,0.37,0.125,0.5095,0.2165,0.1125,0.165,9
+1,0,0,0.55,0.44,0.15,0.8945,0.3145,0.151,0.32,19
+```
+
+Импортируем файл abalone_coded.data в R и посмотрим некоторую статистику
+```{r}
+abalone = read.table("abalone_coded.data",sep=",",header=TRUE)
+summary(abalone)
+```
+
+Нормируем столбцы кроме последнего:
+```{r}
+abalone$Length = (abalone$Length - mean(abalone$Length))/sd(abalone$Length)
+abalone$Diameter = (abalone$Diameter - mean(abalone$Diameter))/sd(abalone$Diameter)
+abalone$Height = (abalone$Height - mean(abalone$Height))/sd(abalone$Height)
+abalone$Whole = (abalone$Whole - mean(abalone$Whole))/sd(abalone$Whole)
+abalone$Shucked = (abalone$Shucked - mean(abalone$Shucked))/sd(abalone$Shucked)
+abalone$Viscera = (abalone$Viscera - mean(abalone$Viscera))/sd(abalone$Viscera)
+abalone$Shell = (abalone$Shell - mean(abalone$Shell))/sd(abalone$Shell)
+```
+
+Разделим все данные на обучающие и проверочные:
+```{r}
+length = length(abalone$F);
+
+train.ind = sample(1:length,2*length/3)
+train = abalone[train.ind,]
+val = abalone[-train.ind,]
+```
+
+Подключим библиотеку rgd и инициализируем наборы данных
+```{r}
+library(rgp)
+
+functionSet1 <- functionSet("+", "-", "*", "/")
+inputVariableSet1 <- inputVariableSet("F","M","I","Length","Diameter","Height","Whole","Shucked","Viscera","Shell")
+constantFactorySet1 <- constantFactorySet(function() rnorm(1))
+```
+
+Создадим переменные для обучения с ранним остановом:
+```{r}
+lastError = 10000000
+bestFunction = function(){}
+```
+
+Составим фитнес-функцию:
+```{r}
+fitnessFunction1 = function(f){
+   t = f(train[,1],train[,2],train[,3],train[,4],train[,5],train[,6],train[,7],train[,8],train[,9],train[,10])
+   diff = sum((train[,11]-t)^2)
+   if (is.na(diff)) {
+     diff = 10000000
+   }
+   tmp = f(val[,1],val[,2],val[,3],val[,4],val[,5],val[,6],val[,7],val[,8],val[,9],val[,10])
+   error = mean(abs(tmp - val[,11]))
+   if (!is.na(error))
+   {
+     if (error<lastError) 
+     {
+       lastError <<- error
+       bestFunction <<- f
+     }
+   }
+   return(diff)
+}
+```
+
+Запустим алгоритм генетического программирования
+```{r GeneticProgramming}
+gpResult1 <- geneticProgramming(functionSet=functionSet1,
+                                inputVariables=inputVariableSet1,
+                                constantSet=constantFactorySet1,
+                                fitnessFunction=fitnessFunction1,
+                                populationSize=1000,
+                                stopCondition=makeStepsStopCondition(3000))
+```
+
+Лучший результат достигнут программой:
+```{r}
+print(gpResult1$elite[1])
+```
+
+Проверим программу на тестовом множестве:
+```{r}
+best1 <- gpResult1$population[[which.min(sapply(gpResult1$population, fitnessFunction1))]]
+best1Compute = best1(val[,1],val[,2],val[,3],val[,4],val[,5],val[,6],val[,7],val[,8],val[,9],val[,10])
+meanError = mean(abs(best1Compute - val[,11]))
+meanError
+```
+
+Первые 10 результатов:
+```{r}
+best1Compute[1:10]
+val[1:10,11]
+```
+
+Лучшая функция по результатам обучения с ранним остановом:
+```{r}
+print(bestFunction)
+```
+
+Средняя ошибка:
+```{r}
+lastError
+```
+
+Первые 10 результатов:
+```{r}
+best2Compute = bestFunction(val[,1],val[,2],val[,3],val[,4],val[,5],val[,6],val[,7],val[,8],val[,9],val[,10])
+best2Compute[1:10]
+val[1:10,11]
+```

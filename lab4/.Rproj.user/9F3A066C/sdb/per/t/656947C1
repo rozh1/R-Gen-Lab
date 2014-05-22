@@ -1,0 +1,21 @@
+{
+    "contents" : "",
+    "created" : 1400404260737.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "656947C1",
+    "lastKnownWriteTime" : 21392300099829876,
+    "path" : null,
+    "properties" : {
+        "caption" : "val",
+        "contentUrl" : "content?title=val&file=524a2cbc393f45e398aa1498bcde5aa8.htm",
+        "displayedObservations" : 1000,
+        "displayedVariables" : 12,
+        "totalObservations" : 1393,
+        "variables" : 11
+    },
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}
