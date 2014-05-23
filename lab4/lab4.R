@@ -18,9 +18,14 @@ constantFactorySet1 <- constantFactorySet(function() rnorm(1))
 
 length = length(abalone$F);
 
-train.ind = sample(1:length,2*length/3)
+train.ind = sample(1:length,length/3)
 train = abalone[train.ind,]
-val = abalone[-train.ind,]
+temp = abalone[-train.ind,]
+length = length(temp$F);
+val.ind = sample(1:length,length/2)
+val = temp[val.ind,]
+test = temp[-val.ind,]
+
 
 lastError = 10000000
 
@@ -52,7 +57,7 @@ gpResult1 <- geneticProgramming(functionSet=functionSet1,
                                 inputVariables=inputVariableSet1,
                                 constantSet=constantFactorySet1,
                                 fitnessFunction=fitnessFunction1,
-                                populationSize=100,
+                                populationSize=500,
                                 eliteSize=15,
                                 stopCondition=makeStepsStopCondition(300))
 
@@ -60,16 +65,16 @@ print(gpResult1$elite[1])
 
 best1 <- gpResult1$population[[which.min(sapply(gpResult1$population, fitnessFunction1))]]
 
-best1Compute = best1(val[,1],val[,2],val[,3],val[,4],val[,5],val[,6],val[,7],val[,8],val[,9],val[,10])
-mean(abs(best1Compute - val[,11]))
+best1Compute = best1(test[,1],test[,2],test[,3],test[,4],test[,5],test[,6],test[,7],test[,8],test[,9],test[,10])
+mean(abs(best1Compute - test[,11]))
 
 best1Compute[1:10]
-val[1:10,11]
+test[1:10,11]
 
 print(bestFunction)
 
-lastError
-
-best2Compute = bestFunction(val[,1],val[,2],val[,3],val[,4],val[,5],val[,6],val[,7],val[,8],val[,9],val[,10])
+best2Compute = bestFunction(test[,1],test[,2],test[,3],test[,4],test[,5],test[,6],test[,7],test[,8],test[,9],test[,10])
+mean(abs(best2Compute - test[,11]))
 best2Compute[1:10]
-val[1:10,11]
+test[1:10,11]
+

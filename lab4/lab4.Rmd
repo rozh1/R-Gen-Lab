@@ -66,13 +66,16 @@ abalone$Viscera = (abalone$Viscera - mean(abalone$Viscera))/sd(abalone$Viscera)
 abalone$Shell = (abalone$Shell - mean(abalone$Shell))/sd(abalone$Shell)
 ```
 
-Разделим все данные на обучающие и проверочные:
+Разделим все данные на обучающие, проверочные и тестовые:
 ```{r}
 length = length(abalone$F);
-
-train.ind = sample(1:length,2*length/3)
+train.ind = sample(1:length,length/3)
 train = abalone[train.ind,]
-val = abalone[-train.ind,]
+temp = abalone[-train.ind,]
+length = length(temp$F);
+val.ind = sample(1:length,length/2)
+val = temp[val.ind,]
+test = temp[-val.ind,]
 ```
 
 Подключим библиотеку rgd и инициализируем наборы данных
@@ -130,15 +133,15 @@ print(gpResult1$elite[1])
 Проверим программу на тестовом множестве:
 ```{r}
 best1 <- gpResult1$population[[which.min(sapply(gpResult1$population, fitnessFunction1))]]
-best1Compute = best1(val[,1],val[,2],val[,3],val[,4],val[,5],val[,6],val[,7],val[,8],val[,9],val[,10])
-meanError = mean(abs(best1Compute - val[,11]))
+best1Compute = best1(test[,1],test[,2],test[,3],test[,4],test[,5],test[,6],test[,7],test[,8],test[,9],test[,10])
+meanError = mean(abs(best1Compute - test[,11]))
 meanError
 ```
 
 Первые 10 результатов:
 ```{r}
 best1Compute[1:10]
-val[1:10,11]
+test[1:10,11]
 ```
 
 Лучшая функция по результатам обучения с ранним остановом:
@@ -148,12 +151,12 @@ print(bestFunction)
 
 Средняя ошибка:
 ```{r}
-lastError
+best2Compute = bestFunction(test[,1],test[,2],test[,3],test[,4],test[,5],test[,6],test[,7],test[,8],test[,9],test[,10])
+mean(abs(best2Compute - test[,11]))
 ```
 
 Первые 10 результатов:
 ```{r}
-best2Compute = bestFunction(val[,1],val[,2],val[,3],val[,4],val[,5],val[,6],val[,7],val[,8],val[,9],val[,10])
 best2Compute[1:10]
-val[1:10,11]
+test[1:10,11]
 ```
