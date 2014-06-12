@@ -1,150 +1,87 @@
-library("png")
 library("rgenoud")
 
-logo = readPNG("homo.png")
-
-imageSize=dim(logo)
-
-nrows = imageSize[1]
-ncols = imageSize[2]
-
-Num = 4*100
-
-imageNum=0
-
-DrawImage <- function(xx, filename="")
+neuron <- function(xxInputs, xxWeights)
 {
-  outImageMatrix=matrix(1,nrow=nrows,ncol=ncols)
-  len = length(xx)/4
-  summ=0
+  
+  sum = xxWeights[1]
+  
+  for (i in 1:length(xxInputs))
+  {
+    sum=sum+xxWeights[i+1]*xxInputs[i]
+  }
+  
+  return (1/(1+exp(-sum*5)))
+}
+
+Robot <- function(xxInputs, xxWeights)
+{
+  result = c(0,0,0)
+  len = length(xxWeights)/5
   for (i in 1:len)
   {
-    x1=xx[(i-1)*4+1]
-    y1=xx[(i-1)*4+2]
-    x2=xx[(i-1)*4+3]
-    y2=xx[(i-1)*4+4]
-    outImageMatrix[y1:y2,x1:x2] = 0 
+    weights = c(xxWeights[(i-1)*5+1],
+                xxWeights[(i-1)*5+2],
+                xxWeights[(i-1)*5+3],
+                xxWeights[(i-1)*5+4],
+                xxWeights[(i-1)*5+5])
+    result[i]=neuron(xxInputs,weights)
   }
-  if (filename=="")
-    #writePNG(outImageMatrix, sprintf("result/%06d.png",imageNum))
-  else
-    writePNG(outImageMatrix, sprintf(filename,imageNum))
-  imageNum <<- imageNum+1
+  return (result)
 }
+
+data = read.csv(file="neurons_data.csv",header=TRUE,sep=";")
+data
+inputs = data[,1:4]
+outputs = data[,5:7]
+
+Num = 15*1
 
 f <- function(xx)
 {
-  len = length(xx)/4
-  imageMatrix=matrix(1,nrow=nrows,ncol=ncols)
-  #summ=0
-  for (i in 1:len)
-  {
-    x1=xx[(i-1)*4+1]
-    y1=xx[(i-1)*4+2]
-    x2=xx[(i-1)*4+3]
-    y2=xx[(i-1)*4+4]
-    imageMatrix[y1:y2,x1:x2] = 0 
-    #summ=summ+sum(logo[y1:y2,x1:x2])
-  }
-  sub = imageMatrix-logo
-  sub[sub<0]<-0
-  summ = sum(sub)
+  len = length(xx)/15
+  summ=0
   
-  sub = logo-imageMatrix
-  sub[sub<0]<-0
-  summ = summ + sum(sub)
-  DrawImage(xx)
+  inputLen = length(inputs[,1])
+  outputColls = length(outputs[1,])
+  
+  for (inputIndex in 1:inputLen)
+  {
+    input = as.vector(as.matrix(inputs[inputIndex,]))
+    for (i in 1:len)
+    {
+      weights = rep(0,15)
+      for (j in 1:15)
+      {
+        weights[j] = xx[(i-1)*15+j]
+      }
+      
+      output = Robot(xxInputs=input,xxWeights=weights)
+      needOutput = as.vector(as.matrix(outputs[inputIndex,]))
+      
+      for(outputIndex in 1:outputColls)
+      {
+        summ = summ + abs(output[outputIndex] - needOutput[outputIndex])
+      }
+    }
+  }
   return (summ)
 }
 
-dom = c(1,ncols,1,nrows,1,ncols,1,nrows)
+dom = c(-1,1)
 m = matrix(dom,nrow=Num,ncol=2,byrow=TRUE)
 
-#res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2)
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=10,P3=100,P4=50,P5=20,P6=20,P7=30,P8=20,P9=0)
+res = genoud(fn=f,max.generations=50,nvars=Num,Domains=m,pop.size=100,boundary.enforcement=2,BFGS=FALSE,P9=0)
 
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out1")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=100,P2=0,P3=0,P4=0,P5=0,P6=0,P7=0,P8=0,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out2")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=50,P3=0,P4=0,P5=0,P6=0,P7=0,P8=0,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out3")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=50,P3=50,P4=0,P5=0,P6=0,P7=0,P8=0,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out4")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=10,P3=50,P4=50,P5=0,P6=0,P7=0,P8=0,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out5")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=10,P3=50,P4=50,P5=0,P6=0,P7=0,P8=0,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out6")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=10,P3=50,P4=50,P5=50,P6=0,P7=0,P8=0,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out7")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=10,P3=50,P4=50,P5=50,P6=50,P7=0,P8=0,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out8")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=10,P3=50,P4=50,P5=50,P6=50,P7=50,P8=0,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out9")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=10,P3=50,P4=50,P5=50,P6=50,P7=50,P8=50,P9=0)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out10")
-
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=10,P3=50,P4=50,P5=50,P6=50,P7=50,P8=50,P9=50)
-
-rectangles = res$par
-
-DrawImage(rectangles,filename="result/out11")
+resultWeights = res$par
+resultWeights
+f(resultWeights)
 
 
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=10,data.type.int=TRUE,boundary.enforcement=2,P1=50,P2=0,P3=0,P4=50,P5=50,P6=50,P7=50,P8=50,P9=0,gradient.check=FALSE, BFGS=FALSE)
+  input = as.vector(as.matrix(inputs[1,]))
 
-rectangles = res$par
+    Robot(xxInputs=input,xxWeights=resultWeights)
+    as.vector(as.matrix(outputs[1,]))
+  
 
-DrawImage(rectangles,filename="out12.png")
-
-#outImageMatrix=matrix(1,nrow=nrows,ncol=ncols)
-#
-#len = length(rectangles)/4
-#i=0
-#for (i in 1:len)
-#{
-#  x1=rectangles[(i-1)*4+1]
-#  y1=rectangles[(i-1)*4+2]
-#  x2=rectangles[(i-1)*4+3]
-#  y2=rectangles[(i-1)*4+4]
-#  outImageMatrix[y1:y2,x1:x2] = 0 
-#}
-
-#writePNG(outImageMatrix,"out.png")
+input=c(0,0,0,0)
+Robot(xxInputs=input,xxWeights=resultWeights)

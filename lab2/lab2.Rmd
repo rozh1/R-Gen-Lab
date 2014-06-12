@@ -1,105 +1,149 @@
-Лабораторная работа №1
+Лабораторная работа №2
 ========================================================
 
 Задание
--------------------------
+--------------------------------------------------------
 
-Получить изображение похожее на исходное с помощью генетического алгорима.
+Обучить нейронную сеть с помощью генетического алгоритма
 
 Ход работы
--------------------------
+--------------------------------------------------------
 
-Импортируем нужные библиотеки и загружаем эталон.
-
-```{r}
-library("png")
+Подключим необходимые библиотеки
+```{r Library import}
 library("rgenoud")
-
-logo = readPNG("homo.png")
 ```
 
-![Эталон](homo.png)
+Напишем функции для работы с нейронной сетью:
 
-Далее обозначим размеры картинки и количество генов в хромосоме
-
-```{r}
-imageSize=dim(logo)
-
-nrows = imageSize[1]
-ncols = imageSize[2]
-
-Num = 4*100
-```
-
-Напишем функцию вывода изображения текущей хромосомы
-
-```{r}
-imageNum=0
-
-DrawImage <- function(xx,filename="")
+1. функция нейрона
+```{r Neuron function}
+neuron <- function(xxInputs, xxWeights)
 {
-  outImageMatrix=matrix(1,nrow=nrows,ncol=ncols)
-  len = length(xx)/4
-  summ=0
-  for (i in 1:len)
+  
+  sum = xxWeights[1]
+  
+  for (i in 1:length(xxInputs))
   {
-    x1=xx[(i-1)*4+1]
-    y1=xx[(i-1)*4+2]
-    x2=xx[(i-1)*4+3]
-    y2=xx[(i-1)*4+4]
-    outImageMatrix[y1:y2,x1:x2] = 0 
+    sum=sum+xxWeights[i+1]*xxInputs[i]
   }
-  if (filename=="")
-    writePNG(outImageMatrix, sprintf("result/%06d.png",imageNum))
-  else
-    writePNG(outImageMatrix, sprintf(filename,imageNum))
-  imageNum <<- imageNum+1
+  
+  return (1/(1+exp(-sum*5)))
 }
 ```
 
-Напишем фитнес-функцию для генетического алгоритма
-
-```{r}
-f <- function(xx)
+2. Функция, реализующая работу нейронной сети робота
+```{r Robot brain function}
+Robot <- function(xxInputs, xxWeights)
 {
-  len = length(xx)/4
-  imageMatrix=matrix(1,nrow=nrows,ncol=ncols)
-  #summ=0
+  result = c(0,0,0)
+  len = length(xxWeights)/5
   for (i in 1:len)
   {
-    x1=xx[(i-1)*4+1]
-    y1=xx[(i-1)*4+2]
-    x2=xx[(i-1)*4+3]
-    y2=xx[(i-1)*4+4]
-    imageMatrix[y1:y2,x1:x2] = 0 
-    #summ=summ+sum(logo[y1:y2,x1:x2])
+    weights = c(xxWeights[(i-1)*5+1],
+                xxWeights[(i-1)*5+2],
+                xxWeights[(i-1)*5+3],
+                xxWeights[(i-1)*5+4],
+                xxWeights[(i-1)*5+5])
+    result[i]=neuron(xxInputs,weights)
   }
-  sub = imageMatrix-logo
-  sub[sub<0]<-0
-  summ = sum(sub)
+  return (result)
+}
+```
+
+Загрузим учебник для нейронной сети
+```{r Neuron network train book}
+data = read.csv(file="neurons_data.csv",header=TRUE,sep=";")
+data
+inputs = data[,1:4]
+outputs = data[,5:7]
+```
+
+Запишем фитнес функцию для генетического алгоритма
+```{r Health function}
+f <- function(xx)
+{
+  len = length(xx)/15
+  summ=0
   
-  sub = logo-imageMatrix
-  sub[sub<0]<-0
-  summ = summ + sum(sub)
-  DrawImage(xx)
+  inputLen = length(inputs[,1])
+  outputColls = length(outputs[1,])
+  
+  for (inputIndex in 1:inputLen)
+  {
+    input = as.vector(as.matrix(inputs[inputIndex,]))
+    for (i in 1:len)
+    {
+      weights = rep(0,15)
+      for (j in 1:15)
+      {
+        weights[j] = xx[(i-1)*15+j]
+      }
+      
+      output = Robot(xxInputs=input,xxWeights=weights)
+      needOutput = as.vector(as.matrix(outputs[inputIndex,]))
+      
+      for(outputIndex in 1:outputColls)
+      {
+        summ = summ + abs(output[outputIndex] - needOutput[outputIndex])
+      }
+    }
+  }
   return (summ)
 }
 ```
 
-Запустим генетический алгорим с помощью genoud
-
-```{r}
-dom = c(1,ncols,1,nrows,1,ncols,1,nrows)
+Инициализируем данные для генетического алгоритма
+```{r Genetic algorithm initialization}
+Num = 15*1
+dom = c(-1,1)
 m = matrix(dom,nrow=Num,ncol=2,byrow=TRUE)
+```
 
-res = genoud(fn=f,max.generations=100,nvars=Num,Domains=m,pop.size=100,data.type.int=TRUE,boundary.enforcement=2)
+Запустим генетический алгоритм
+```{r Genetic algorithm work}
+res = genoud(fn=f,max.generations=50,nvars=Num,Domains=m,pop.size=1000,boundary.enforcement=2,BFGS=FALSE,P9=0)
 ```
 
 Получим результат
-```{r}
-rectangles = res$par
-
-DrawImage(rectangles,filename="output.png")
+```{r Genetic algorithm result}
+resultWeights = res$par
+resultWeights
+f(resultWeights)
 ```
 
-![Результат](output.png)
+Сравним результат с эталоном 1:
+```{r Result check 1}
+input = as.vector(as.matrix(inputs[1,]))
+Robot(xxInputs=input,xxWeights=resultWeights)
+as.vector(as.matrix(outputs[1,]))
+```
+
+Сравним результат с эталоном 2:
+```{r Result check 2}
+input = as.vector(as.matrix(inputs[2,]))
+Robot(xxInputs=input,xxWeights=resultWeights)
+as.vector(as.matrix(outputs[2,]))
+```
+
+Сравним результат с эталоном 3:
+```{r Result check 3}
+input = as.vector(as.matrix(inputs[3,]))
+Robot(xxInputs=input,xxWeights=resultWeights)
+as.vector(as.matrix(outputs[3,]))
+```
+
+Сравним результат с эталоном 4:
+```{r Result check 4}
+input = as.vector(as.matrix(inputs[4,]))
+Robot(xxInputs=input,xxWeights=resultWeights)
+as.vector(as.matrix(outputs[4,]))
+```
+
+Результат работы при отсутсвии искомой батарейки
+```{r Check}
+input=c(0,0,0,0)
+Robot(xxInputs=input,xxWeights=resultWeights)
+```
+
+Робот поехал за батарейкой вперед :-)
